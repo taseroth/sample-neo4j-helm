@@ -1,0 +1,26 @@
+# nonk8s
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: bert-test
+  tags: {user: bert-radke}
+  region: eu-central-1
+
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: neo4j-nodes
+    instanceType: t2.medium
+    desiredCapacity: 4
+    minSize: 1
+    maxSize: 4
+    labels: {role: eks-worker}
+    tags:
+      user: bert-radke
+    volumeSize: 10
+    availabilityZones: ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
+    ssh:
+      allow: true # will use ~/.ssh/id_rsa.pub as the default ssh key
+

@@ -1,0 +1,26 @@
+
+eksctl create cluster --name "bert-test" --region "${AWS_DEFAULT_REGION}" --nodegroup-name "neo4j-nodes" --zones "eu-central-1c,eu-central-1a" --node-zones "${AWS_AVAILABILITY_ZONE}" --nodes-min 1 --nodes-max 4 --node-type t2.medium --nodes 4 --node-volume-size 10 --ssh-access --with-oidc
+
+
+aws eks update-kubeconfig --name bert-test
+
+aws ec2 create-volume --availability-zone=eu-central-1a --size=5 --volume-type=gp3 --tag-specifications 'ResourceType=volume,Tags=[{Key=volume,Value=core-disk-1},{Key=user, Value=bert}]'
+aws ec2 create-volume --availability-zone=eu-central-1b --size=5 --volume-type=gp3 --tag-specifications 'ResourceType=volume,Tags=[{Key=volume,Value=core-disk-2},{Key=user, Value=bert}]'
+aws ec2 create-volume --availability-zone=eu-central-1c --size=5 --volume-type=gp3 --tag-specifications 'ResourceType=volume,Tags=[{Key=volume,Value=core-disk-3},{Key=user, Value=bert}]'
+aws ec2 create-volume --availability-zone=eu-central-1b --size=5 --volume-type=gp3 --tag-specifications 'ResourceType=volume,Tags=[{Key=volume,Value=rr-disk-1},{Key=user, Value=bert}]'
+
+aws ec2 describe-volumes --filters Name=tag:volume,Values=core-disk-1,core-disk-2,core-disk-3,rr-disk-1 --query "Volumes[*].{ID:VolumeId}" --output text
+
+# use the values from above and put then into the core and cc yamls
+
+helm install core-1 neo4j/neo4j-cluster-core -f core-1.values.yaml
+helm install core-2 neo4j/neo4j-cluster-core -f core-2.values.yaml
+helm install core-3 neo4j/neo4j-cluster-core -f core-3.values.yaml
+helm install rr-1 neo4j/neo4j-cluster-core -f rr-1.values.yaml
+
+helm install lb neo4j/neo4j-cluster-loadbalancer --set neo4j.name=test-cluster
+
+kubectl apply -f backup.yaml
+
+
+eksctl scale nodegroup --cluster=bert-test --nodes=5 --name=neo4j-nodes --nodes-max=5

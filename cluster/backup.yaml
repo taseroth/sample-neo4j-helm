@@ -1,0 +1,19 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backupjob
+spec:
+  schedule: "10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backupworkerpod
+              image: neo4j:4.4.6-enterprise
+              command: ["/bin/sh","-c"]
+              args: ['mkdir -p /backups/`date +"%Y-%m-%D"`; bin/neo4j-admin backup --from=rr-1-admin.default.svc.cluster.local:6362 --backup-dir=/backups/`date +"%Y-%m-%D"` --database=*']
+          restartPolicy: Never
