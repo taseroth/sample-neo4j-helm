@@ -6,11 +6,14 @@ neo4j:
   password: "secret"
   acceptLicenseAgreement: "yes"
 
+nodeSelector:
+  topology.kubernetes.io/zone: "eu-central-1b"
+
 volumes:
   data:
     mode: "volume"
     volume:
       awsElasticBlockStore:
         # The ID of the awsElasticBlockStore volume you have created for this cluster member.
-        volumeID: "vol-0e892c2d991dcd5ee"
+        volumeID: "vol-02fffb0beb0c4fc98"
         fsType: ext4
